@@ -29,7 +29,9 @@
     .configuracoes { margin:18px 0; padding:18px; border:1px solid var(--borda); border-radius:14px; background:#f8fbf9; }
     .configuracoes h2 { margin:0 0 5px; font-size:1.15rem; }
     .configuracoes > p { margin:0 0 16px; color:var(--cinza); font-size:.88rem; }
-    .config-grid { display:grid; grid-template-columns:1.2fr 1fr 1fr 1fr .55fr; gap:10px; align-items:end; margin-bottom:10px; }
+    .config-grid { display:grid; grid-template-columns:1.15fr .9fr 1fr 1fr auto; gap:10px; align-items:end; margin-bottom:10px; padding:12px; border:1px solid var(--borda); border-radius:12px; background:#fff; }
+    .adicionar { background:#e6f3ec; color:var(--verde); padding:0 18px; }
+    .remover-colaborador { background:#fbe6e4; color:#a12d23; padding:0 14px; }
     .config-acoes { display:flex; justify-content:flex-end; gap:9px; margin-top:14px; }
     .cancelar { background:#e8eeeb; color:var(--texto); padding:0 18px; }
     .salvar { background:var(--verde); color:white; padding:0 18px; }
@@ -108,10 +110,10 @@
         <div class="config-acoes"><button class="cancelar" id="btnLimparFerias" type="button">Remover férias</button><button class="cancelar" id="btnCancelarFerias" type="button">Cancelar</button><button class="salvar" id="btnSalvarFerias" type="button">Salvar férias</button></div>
       </section>
       <section class="configuracoes" id="configuracoes" hidden>
-        <h2>Editar colaboradores e horários</h2>
-        <p>Você também pode cadastrar férias. O período considera dias corridos e fica salvo neste navegador.</p>
+        <h2>Editar equipe</h2>
+        <p>Altere os dados atuais ou adicione colaboradores de outros setores. As mudanças ficam salvas neste navegador.</p>
         <div id="configLinhas"></div>
-        <div class="config-acoes"><button class="cancelar" id="btnCancelar" type="button">Cancelar</button><button class="salvar" id="btnSalvar" type="button">Salvar alterações</button></div>
+        <div class="config-acoes"><button class="adicionar" id="btnAdicionarColaborador" type="button">+ Adicionar colaborador</button><button class="cancelar" id="btnCancelar" type="button">Cancelar</button><button class="salvar" id="btnSalvar" type="button">Salvar alterações</button></div>
       </section>
       <div class="resultado" id="resultado" data-status=""><div class="icone" id="icone">📅</div><div><h2 id="tituloResultado">Selecione uma data</h2><p id="textoResultado">A situação aparecerá aqui.</p></div></div>
       <section class="anotacao-dia">
@@ -150,10 +152,10 @@
     const primeira = chaves[0], ultima = chaves.at(-1);
 
     const CONFIG_PADRAO = {
-      FLAVIANA:{nome:'Flaviana',semana:'06:30 às 12:30',fimSemana:'07:00 às 19:00',feriasInicio:'',feriasDias:0},
-      VINICIUS:{nome:'Vinicius',semana:'13:30 às 18:30',fimSemana:'07:00 às 19:00',feriasInicio:'',feriasDias:0},
-      CAIO:{nome:'Caio',semana:'8 horas',fimSemana:'Conforme escala',feriasInicio:'',feriasDias:0},
-      GABRIEL:{nome:'Gabriel',semana:'8 horas',fimSemana:'Conforme escala',feriasInicio:'2026-08-11',feriasDias:12}
+      FLAVIANA:{nome:'Flaviana',setor:'',semana:'06:30 às 12:30',fimSemana:'07:00 às 19:00',feriasInicio:'',feriasDias:0},
+      VINICIUS:{nome:'Vinicius',setor:'',semana:'13:30 às 18:30',fimSemana:'07:00 às 19:00',feriasInicio:'',feriasDias:0},
+      CAIO:{nome:'Caio',setor:'',semana:'8 horas',fimSemana:'Conforme escala',feriasInicio:'',feriasDias:0},
+      GABRIEL:{nome:'Gabriel',setor:'',semana:'8 horas',fimSemana:'Conforme escala',feriasInicio:'2026-08-11',feriasDias:12}
     };
     let configEquipe;
     try { configEquipe = {...CONFIG_PADRAO,...JSON.parse(localStorage.getItem('escalaEquipe')||'{}')}; }
@@ -177,16 +179,16 @@
     }
 
     function pessoasDisponiveis() {
-      return [...new Set(Object.values(ESCALA).flatMap(m => Object.keys(m.pessoas)))].filter(n => n !== 'MATEUS' && configEquipe[n]).sort();
+      return Object.keys(configEquipe).filter(n => n !== 'MATEUS').sort((a,b) => (configEquipe[a].nome || a).localeCompare(configEquipe[b].nome || b,'pt-BR'));
     }
     function preencherPessoas(selecionada='FLAVIANA') {
-      pessoa.innerHTML = pessoasDisponiveis().map(n => `<option value="${n}">${configEquipe[n].nome}</option>`).join('');
+      pessoa.innerHTML = pessoasDisponiveis().map(n => `<option value="${n}">${escaparHtml(configEquipe[n].nome)}${configEquipe[n].setor ? ` — ${escaparHtml(configEquipe[n].setor)}` : ''}</option>`).join('');
       if ([...pessoa.options].some(o => o.value === selecionada)) pessoa.value = selecionada;
     }
     preencherPessoas();
 
     function preencherFeriasPessoa(selecionada=pessoa.value) {
-      feriasPessoa.innerHTML = pessoasDisponiveis().map(id => `<option value="${id}">${escaparHtml(configEquipe[id].nome)}</option>`).join('');
+      feriasPessoa.innerHTML = pessoasDisponiveis().map(id => `<option value="${id}">${escaparHtml(configEquipe[id].nome)}${configEquipe[id].setor ? ` — ${escaparHtml(configEquipe[id].setor)}` : ''}</option>`).join('');
       if ([...feriasPessoa.options].some(o => o.value === selecionada)) feriasPessoa.value = selecionada;
       carregarFeriasSelecionadas();
     }
@@ -230,7 +232,8 @@
       tituloResultado.textContent = texto;
       const cfg=configEquipe[pessoa.value], fimSemana=data.getDay()===0||data.getDay()===6;
       const horario = codigo==='F' ? 'Sem expediente' : codigo==='FÉRIAS' ? 'Período de férias' : fimSemana ? cfg?.fimSemana : cfg?.semana;
-      textoResultado.textContent = cadastro ? `${cfg?.nome||pessoa.value} • ${horario||cadastro.escala} • ${dataLonga}` : `${cfg?.nome||pessoa.value} não consta neste mês • ${dataLonga}`;
+      const identificacao = `${cfg?.nome||pessoa.value}${cfg?.setor ? ` — ${cfg.setor}` : ''}`;
+      textoResultado.textContent = cadastro ? `${identificacao} • ${horario||cadastro.escala} • ${dataLonga}` : `${identificacao} • ${horario||'Horário não informado'} • ${dataLonga}`;
       carregarAnotacao();
     }
     function renderizar() {
@@ -258,16 +261,34 @@
     calendario.addEventListener('click',e=>{ const botao=e.target.closest('[data-data]'); if(!botao)return; dataInput.value=botao.dataset.data; mostrarResultado(); renderizar(); });
     dataInput.addEventListener('change',()=>{ if(!dataInput.value)return; const [a,m]=dataInput.value.split('-').map(Number); mesVisivel=new Date(a,m-1,1); renderizar(); });
     pessoa.addEventListener('change',renderizar);
+    function linhaConfiguracao(id,c={}) {
+      return `<div class="config-grid" data-id="${id}"><div><label>NOME</label><input class="cfg-nome" value="${escaparHtml(c.nome||'')}" placeholder="Nome do colaborador"></div><div><label>SETOR</label><input class="cfg-setor" value="${escaparHtml(c.setor||'')}" placeholder="Ex.: Recepção"></div><div><label>DIAS ÚTEIS</label><input class="cfg-semana" value="${escaparHtml(c.semana||'')}" placeholder="Ex.: 08:00 às 17:00"></div><div><label>FIM DE SEMANA</label><input class="cfg-fds" value="${escaparHtml(c.fimSemana||'')}" placeholder="Ex.: Conforme escala"></div><button class="remover-colaborador" type="button">Remover</button></div>`;
+    }
     function abrirConfiguracoes() {
-      configLinhas.innerHTML = pessoasDisponiveis().map(id=>{const c=configEquipe[id]; return `<div class="config-grid" data-id="${id}"><div><label>NOME</label><input class="cfg-nome" value="${c.nome}"></div><div><label>DIAS ÚTEIS</label><input class="cfg-semana" value="${c.semana}"></div><div><label>FIM DE SEMANA</label><input class="cfg-fds" value="${c.fimSemana}"></div><div><label>INÍCIO DAS FÉRIAS</label><input class="cfg-ferias" type="date" value="${c.feriasInicio||''}"></div><div><label>DIAS</label><input class="cfg-dias" type="number" min="0" value="${c.feriasDias||0}"></div></div>`}).join('');
+      configLinhas.innerHTML = pessoasDisponiveis().map(id=>linhaConfiguracao(id,configEquipe[id])).join('');
       configuracoes.hidden=false;
       configuracoes.scrollIntoView({behavior:'smooth',block:'nearest'});
     }
     document.querySelector('#btnConfigurar').addEventListener('click',abrirConfiguracoes);
+    document.querySelector('#btnAdicionarColaborador').addEventListener('click',()=>{
+      const id=`NOVO_${Date.now()}`;
+      configLinhas.insertAdjacentHTML('beforeend',linhaConfiguracao(id));
+      configLinhas.lastElementChild.querySelector('.cfg-nome').focus();
+    });
+    configLinhas.addEventListener('click',e=>{
+      const botao=e.target.closest('.remover-colaborador');
+      if (!botao) return;
+      const total=configLinhas.querySelectorAll('[data-id]').length;
+      if (total<=1) return alert('A equipe precisa ter pelo menos um colaborador.');
+      botao.closest('[data-id]').remove();
+    });
     document.querySelector('#btnCancelar').addEventListener('click',()=>configuracoes.hidden=true);
     document.querySelector('#btnSalvar').addEventListener('click',()=>{
       const selecionada=pessoa.value;
-      configLinhas.querySelectorAll('[data-id]').forEach(linha=>{const id=linha.dataset.id; configEquipe[id]={nome:linha.querySelector('.cfg-nome').value.trim()||id,semana:linha.querySelector('.cfg-semana').value.trim(),fimSemana:linha.querySelector('.cfg-fds').value.trim(),feriasInicio:linha.querySelector('.cfg-ferias').value,feriasDias:Number(linha.querySelector('.cfg-dias').value)||0};});
+      const novaEquipe={};
+      configLinhas.querySelectorAll('[data-id]').forEach(linha=>{const id=linha.dataset.id,cadastroAnterior=configEquipe[id]||{}; const nome=linha.querySelector('.cfg-nome').value.trim(); if(!nome)return; novaEquipe[id]={nome,setor:linha.querySelector('.cfg-setor').value.trim(),semana:linha.querySelector('.cfg-semana').value.trim(),fimSemana:linha.querySelector('.cfg-fds').value.trim(),feriasInicio:cadastroAnterior.feriasInicio||'',feriasDias:Number(cadastroAnterior.feriasDias)||0};});
+      if(!Object.keys(novaEquipe).length) return alert('Informe o nome de pelo menos um colaborador.');
+      configEquipe=novaEquipe;
       localStorage.setItem('escalaEquipe',JSON.stringify(configEquipe));
       preencherPessoas(selecionada); configuracoes.hidden=true; renderizar();
     });
