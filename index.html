@@ -151,7 +151,9 @@
     const chaves = Object.keys(ESCALA).sort();
     const primeira = chaves[0], ultima = chaves.at(-1);
 
-    const CHAVE_EQUIPE = 'escalaEquipeInicialRestauradaV1';
+    // Chave exclusiva desta equipe. Não reutilizar chaves de outros setores,
+    // pois o navegador sempre prioriza os dados já gravados no localStorage.
+    const CHAVE_EQUIPE = 'escalaEquipeAdministrativoFlavianaV1';
     const CONFIG_PADRAO = {
       FLAVIANA:{nome:'Flaviana',setor:'',cargaHoraria:'mesma',semana:'06:30 às 12:30',sabado:'07:00 às 19:00',domingo:'07:00 às 19:00',feriasInicio:'',feriasDias:0},
       VINICIUS:{nome:'Vinicius',setor:'',cargaHoraria:'inversa',semana:'13:30 às 18:30',sabado:'07:00 às 19:00',domingo:'07:00 às 19:00',feriasInicio:'',feriasDias:0},
@@ -163,16 +165,16 @@
       configEquipe = JSON.parse(localStorage.getItem(CHAVE_EQUIPE)||'null');
       if (!configEquipe) {
         configEquipe = structuredClone(CONFIG_PADRAO);
-        const antiga = JSON.parse(localStorage.getItem('escalaEquipe')||'null');
-        if (antiga) Object.keys(configEquipe).forEach(id => {
-          if (!antiga[id]) return;
-          configEquipe[id].nome = antiga[id].nome || configEquipe[id].nome;
-          configEquipe[id].semana = antiga[id].semana || configEquipe[id].semana;
-          configEquipe[id].sabado = antiga[id].fimSemana || configEquipe[id].sabado;
-          configEquipe[id].domingo = antiga[id].fimSemana || configEquipe[id].domingo;
-          configEquipe[id].feriasInicio = antiga[id].feriasInicio || configEquipe[id].feriasInicio;
-          configEquipe[id].feriasDias = Number(antiga[id].feriasDias) || configEquipe[id].feriasDias;
+
+        // Recupera somente férias compatíveis da versão anterior. Nomes,
+        // setores e integrantes antigos não são importados para esta equipe.
+        const anterior = JSON.parse(localStorage.getItem('escalaEquipeInicialRestauradaV1')||'null');
+        if (anterior) Object.keys(configEquipe).forEach(id => {
+          if (!anterior[id]) return;
+          configEquipe[id].feriasInicio = anterior[id].feriasInicio || configEquipe[id].feriasInicio;
+          configEquipe[id].feriasDias = Number(anterior[id].feriasDias) || configEquipe[id].feriasDias;
         });
+        localStorage.setItem(CHAVE_EQUIPE, JSON.stringify(configEquipe));
       }
     }
     catch { configEquipe = structuredClone(CONFIG_PADRAO); }
