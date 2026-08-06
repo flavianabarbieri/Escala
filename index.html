@@ -157,7 +157,8 @@
     const chaves = Object.keys(ESCALA).sort();
     const primeira = chaves[0], ultima = chaves.at(-1);
 
-    const CHAVE_EQUIPE = 'escalaEquipeInicialRestauradaV1';
+    // Identificação exclusiva da Equipe TI para não misturar dados com outras escalas.
+    const CHAVE_EQUIPE = 'escalaEquipeTIV2';
     const CONFIG_PADRAO = {
       FLAVIANA:{nome:'Flaviana',setor:'',cargaHoraria:'mesma',semana:'06:30 às 12:30',sabado:'07:00 às 19:00',domingo:'07:00 às 19:00',feriasInicio:'',feriasDias:0},
       VINICIUS:{nome:'Vinicius',setor:'',cargaHoraria:'inversa',semana:'13:30 às 18:30',sabado:'07:00 às 19:00',domingo:'07:00 às 19:00',feriasInicio:'',feriasDias:0},
@@ -169,16 +170,6 @@
       configEquipe = JSON.parse(localStorage.getItem(CHAVE_EQUIPE)||'null');
       if (!configEquipe) {
         configEquipe = structuredClone(CONFIG_PADRAO);
-        const antiga = JSON.parse(localStorage.getItem('escalaEquipe')||'null');
-        if (antiga) Object.keys(configEquipe).forEach(id => {
-          if (!antiga[id]) return;
-          configEquipe[id].nome = antiga[id].nome || configEquipe[id].nome;
-          configEquipe[id].semana = antiga[id].semana || configEquipe[id].semana;
-          configEquipe[id].sabado = antiga[id].fimSemana || configEquipe[id].sabado;
-          configEquipe[id].domingo = antiga[id].fimSemana || configEquipe[id].domingo;
-          configEquipe[id].feriasInicio = antiga[id].feriasInicio || configEquipe[id].feriasInicio;
-          configEquipe[id].feriasDias = Number(antiga[id].feriasDias) || configEquipe[id].feriasDias;
-        });
       }
     }
     catch { configEquipe = structuredClone(CONFIG_PADRAO); }
@@ -186,7 +177,7 @@
       if (!c.cargaHoraria) c.cargaHoraria = 'mesma';
     });
     let anotacoesDatas;
-    try { anotacoesDatas = JSON.parse(localStorage.getItem('escalaAnotacoesDatas')||'{}'); }
+    try { anotacoesDatas = JSON.parse(localStorage.getItem('escalaAnotacoesDatasTI')||'{}'); }
     catch { anotacoesDatas = {}; }
 
     function escaparHtml(valor) {
@@ -412,15 +403,15 @@
     document.querySelector('#btnSalvarAnotacao').addEventListener('click',()=>{
       if (!dataInput.value) return;
       const texto = textoAnotacao.value.trim();
-      if (texto) anotacoesDatas[dataInput.value] = texto; 
+      if (texto) anotacoesDatas[dataInput.value] = texto;
       else delete anotacoesDatas[dataInput.value];
-      localStorage.setItem('escalaAnotacoesDatas',JSON.stringify(anotacoesDatas));
+      localStorage.setItem('escalaAnotacoesDatasTI',JSON.stringify(anotacoesDatas));
       renderizar();
     });
     btnExcluirAnotacao.addEventListener('click',()=>{
       if (!dataInput.value || !anotacoesDatas[dataInput.value]) return;
       delete anotacoesDatas[dataInput.value];
-      localStorage.setItem('escalaAnotacoesDatas',JSON.stringify(anotacoesDatas));
+      localStorage.setItem('escalaAnotacoesDatasTI',JSON.stringify(anotacoesDatas));
       renderizar();
     });
     document.querySelector('#btnHoje').addEventListener('click',()=>{ const alvo=dentroDaBase(hoje)?hoje:new Date(Number(primeira.slice(0,4)),Number(primeira.slice(5))-1,1); dataInput.value=isoLocal(alvo); mesVisivel=new Date(alvo.getFullYear(),alvo.getMonth(),1); renderizar(); });
