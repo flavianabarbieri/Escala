@@ -412,7 +412,7 @@
     document.querySelector('#btnSalvarAnotacao').addEventListener('click',()=>{
       if (!dataInput.value) return;
       const texto = textoAnotacao.value.trim();
-      if (texto) anotacoesDatas[dataInput.value] = texto;
+      if (texto) anotacoesDatas[dataInput.value] = texto; 
       else delete anotacoesDatas[dataInput.value];
       localStorage.setItem('escalaAnotacoesDatas',JSON.stringify(anotacoesDatas));
       renderizar();
