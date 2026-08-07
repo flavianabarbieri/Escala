@@ -26,6 +26,10 @@
     .ferias-painel h2 { margin:0 0 5px; font-size:1.15rem; }
     .ferias-painel > p { margin:0 0 16px; color:var(--cinza); font-size:.88rem; }
     .ferias-grid { display:grid; grid-template-columns:1.2fr 1fr .65fr; gap:10px; align-items:end; }
+    .ferias-lista { margin-top:14px; display:grid; gap:8px; }
+    .ferias-item { display:flex; align-items:center; justify-content:space-between; gap:12px; padding:10px 12px; border:1px solid #ffd19d; border-radius:10px; background:#fff; color:#6f370b; font-size:.88rem; }
+    .ferias-item button { border:0; border-radius:8px; padding:7px 10px; color:#9b1c1c; background:#fee2e2; font-weight:700; cursor:pointer; }
+    .ferias-vazio { margin:0; padding:10px 0; color:var(--cinza); font-size:.86rem; }
     .configuracoes { margin:18px 0; padding:18px; border:1px solid var(--borda); border-radius:14px; background:#f8fbf9; }
     .configuracoes h2 { margin:0 0 5px; font-size:1.15rem; }
     .configuracoes > p { margin:0 0 16px; color:var(--cinza); font-size:.88rem; }
@@ -59,7 +63,7 @@
     .dia:hover { transform:translateY(-2px); box-shadow:0 7px 18px rgba(28,72,52,.11); }
     .dia.vazio { visibility:hidden; }
     .dia.selecionado { outline:3px solid rgba(8,120,62,.25); border-color:var(--verde); }
-    .dia .numero { font-weight:750; }
+    .dia .numero { position:absolute; top:9px; left:9px; z-index:3; font-weight:750; line-height:1; }
     .dia .codigo { position:absolute; right:7px; bottom:7px; min-width:27px; height:27px; padding:0 6px; border-radius:8px; display:grid; place-items:center; font-size:.76rem; font-weight:850; background:#edf1ef; }
     .dia.p .codigo { color:#0756ae; background:#dceaff; }
     .dia.f .codigo { color:#08783e; background:#d8f2e3; }
@@ -82,8 +86,8 @@
 
     .dia.feriado { border:3px solid #11945a; background:#e8f8ef; }
     .dia.feriado:hover { border-color:#08783e; box-shadow:0 0 0 3px rgba(17,148,90,.18),0 8px 20px rgba(8,120,62,.18); }
-    .selo-feriado { position:absolute; top:6px; right:6px; max-width:70%; overflow:hidden; text-overflow:ellipsis; white-space:nowrap; padding:3px 6px; border-radius:6px; color:#075d34; background:#ccefdc; font-size:.57rem; font-weight:900; letter-spacing:.02em; }
-    .ferias-nomes { position:absolute; left:6px; right:6px; bottom:37px; padding:3px 5px; border-radius:6px; color:#8a430c; background:#ffead1; font-size:.58rem; font-weight:800; line-height:1.2; overflow:hidden; text-overflow:ellipsis; white-space:nowrap; }
+    .selo-feriado { position:absolute; z-index:2; top:6px; right:6px; max-width:70%; overflow:hidden; text-overflow:ellipsis; white-space:nowrap; padding:3px 6px; border-radius:6px; color:#075d34; background:#ccefdc; font-size:.57rem; font-weight:900; letter-spacing:.02em; }
+    .ferias-nomes { position:absolute; z-index:2; left:6px; right:6px; bottom:37px; padding:3px 5px; border-radius:6px; color:#8a430c; background:#ffead1; font-size:.58rem; font-weight:800; line-height:1.2; overflow:hidden; text-overflow:ellipsis; white-space:nowrap; }
     .dia.tem-ferias-equipe { min-height:92px; }
     .observacoes { margin-top:18px; padding:14px 16px; background:#fff9e8; border:1px solid #f1df9b; border-radius:11px; color:#675719; }
     .observacoes strong { display:block; margin-bottom:4px; }
@@ -91,7 +95,7 @@
     .legenda { display:flex; flex-wrap:wrap; gap:8px 15px; margin-top:18px; color:var(--cinza); font-size:.82rem; }
     .legenda span b { display:inline-grid; place-items:center; width:24px; height:24px; border-radius:7px; margin-right:5px; background:#edf1ef; color:var(--texto); }
     footer { text-align:center; color:var(--cinza); padding:22px 10px 0; font-size:.78rem; }
-    @media (max-width:700px) { .filtros,.config-grid,.ferias-grid,.anotacao-linha{grid-template-columns:1fr}.hoje,.configurar,.ferias-botao,.anotacao-linha button{width:100%}.painel{padding:15px}.calendario{gap:4px}.dia{min-height:62px;padding:6px}.semana{font-size:.66rem}.dia .codigo{right:4px;bottom:4px;height:23px;min-width:23px}.dia .marca-anotacao{left:4px;bottom:7px}.resultado{padding:15px} }
+    @media (max-width:700px) { .filtros,.config-grid,.ferias-grid,.anotacao-linha{grid-template-columns:1fr}.hoje,.configurar,.ferias-botao,.anotacao-linha button{width:100%}.painel{padding:15px}.calendario{gap:4px}.dia{min-height:72px;padding:6px}.semana{font-size:.66rem}.dia .numero{top:7px;left:7px}.dia .codigo{right:4px;bottom:4px;height:23px;min-width:23px}.dia .marca-anotacao{left:4px;bottom:7px}.ferias-nomes{left:4px;right:4px;bottom:32px}.ferias-item{align-items:flex-start;flex-direction:column}.ferias-item button{width:100%}.resultado{padding:15px} }
   </style>
 </head>
 <body>
@@ -107,13 +111,14 @@
       </div>
       <section class="ferias-painel" id="painelFerias" hidden>
         <h2>Gerenciar férias</h2>
-        <p>Cadastre ou altere o período de férias. A quantidade considera dias corridos e fica salva neste navegador.</p>
+        <p>Cadastre um ou mais períodos de férias. A quantidade considera dias corridos e será sincronizada entre seus aparelhos.</p>
         <div class="ferias-grid">
           <div><label for="feriasPessoa">COLABORADOR</label><select id="feriasPessoa"></select></div>
           <div><label for="feriasInicio">DATA DE INÍCIO</label><input id="feriasInicio" type="date"></div>
           <div><label for="feriasDias">QUANTIDADE DE DIAS</label><input id="feriasDias" type="number" min="0" max="60" value="0"></div>
         </div>
-        <div class="config-acoes"><button class="cancelar" id="btnLimparFerias" type="button">Remover férias</button><button class="cancelar" id="btnCancelarFerias" type="button">Cancelar</button><button class="salvar" id="btnSalvarFerias" type="button">Salvar férias</button></div>
+        <div class="config-acoes"><button class="cancelar" id="btnCancelarFerias" type="button">Fechar</button><button class="salvar" id="btnSalvarFerias" type="button">+ Adicionar período</button></div>
+        <div class="ferias-lista" id="feriasLista"></div>
       </section>
       <section class="configuracoes" id="configuracoes" hidden>
         <h2>Editar equipe</h2>
@@ -143,7 +148,7 @@
     const pessoa = document.querySelector('#pessoa'), dataInput = document.querySelector('#data');
     const configuracoes = document.querySelector('#configuracoes'), configLinhas = document.querySelector('#configLinhas');
     const painelFerias = document.querySelector('#painelFerias'), feriasPessoa = document.querySelector('#feriasPessoa');
-    const feriasInicio = document.querySelector('#feriasInicio'), feriasDias = document.querySelector('#feriasDias');
+    const feriasInicio = document.querySelector('#feriasInicio'), feriasDias = document.querySelector('#feriasDias'), feriasLista = document.querySelector('#feriasLista');
     const calendario = document.querySelector('#calendario'), tituloMes = document.querySelector('#tituloMes');
     const resultado = document.querySelector('#resultado'), tituloResultado = document.querySelector('#tituloResultado');
     const textoResultado = document.querySelector('#textoResultado'), icone = document.querySelector('#icone');
@@ -178,9 +183,19 @@
       }
     }
     catch { configEquipe = structuredClone(CONFIG_PADRAO); }
-    Object.values(configEquipe).forEach(c => {
-      if (!c.cargaHoraria) c.cargaHoraria = 'mesma';
-    });
+    function normalizarEquipe(equipe) {
+      Object.values(equipe).forEach(c => {
+        if (!c.cargaHoraria) c.cargaHoraria = 'mesma';
+        if (!Array.isArray(c.feriasPeriodos)) c.feriasPeriodos = [];
+        if (c.feriasInicio && Number(c.feriasDias)>0 && !c.feriasPeriodos.some(p=>p.inicio===c.feriasInicio && Number(p.dias)===Number(c.feriasDias))) {
+          c.feriasPeriodos.push({inicio:c.feriasInicio,dias:Number(c.feriasDias)});
+        }
+        delete c.feriasInicio;
+        delete c.feriasDias;
+      });
+      return equipe;
+    }
+    configEquipe=normalizarEquipe(configEquipe);
     let anotacoesDatas;
     try { anotacoesDatas = JSON.parse(localStorage.getItem(CHAVE_ANOTACOES)||'{}'); }
     catch { anotacoesDatas = {}; }
@@ -222,7 +237,7 @@
         if (!resposta.ok) throw new Error(await resposta.text());
         const [registro] = await resposta.json();
         if (registro) {
-          if (registro.equipe && Object.keys(registro.equipe).length) configEquipe = registro.equipe;
+          if (registro.equipe && Object.keys(registro.equipe).length) configEquipe = normalizarEquipe(registro.equipe);
           anotacoesDatas = registro.anotacoes || {};
           localStorage.setItem(CHAVE_EQUIPE, JSON.stringify(configEquipe));
           localStorage.setItem(CHAVE_ANOTACOES, JSON.stringify(anotacoesDatas));
@@ -266,8 +281,14 @@
     }
     function carregarFeriasSelecionadas() {
       const cfg = configEquipe[feriasPessoa.value];
-      feriasInicio.value = cfg?.feriasInicio || '';
-      feriasDias.value = Number(cfg?.feriasDias) || 0;
+      feriasInicio.value = '';
+      feriasDias.value = 0;
+      const periodos = Array.isArray(cfg?.feriasPeriodos) ? cfg.feriasPeriodos : [];
+      feriasLista.innerHTML = periodos.length ? periodos.map((periodo,indice)=>{
+        const [a,m,d]=periodo.inicio.split('-').map(Number);
+        const inicio=new Date(a,m-1,d), fim=adicionarDias(inicio,Number(periodo.dias)-1);
+        return `<div class="ferias-item"><span><strong>${inicio.toLocaleDateString('pt-BR')}</strong> até <strong>${fim.toLocaleDateString('pt-BR')}</strong> — ${Number(periodo.dias)} dias</span><button type="button" data-remover-ferias="${indice}">Remover</button></div>`;
+      }).join('') : '<p class="ferias-vazio">Nenhum período de férias cadastrado para este colaborador.</p>';
     }
 
 
@@ -287,9 +308,12 @@
       return moveis.find(([dias])=>isoLocal(adicionarDias(easter,dias))===iso)?.[1] || '';
     }
     function estaDeFerias(cfg,data) {
-      if (!cfg?.feriasInicio || Number(cfg.feriasDias)<1) return false;
-      const [a,m,d]=cfg.feriasInicio.split('-').map(Number), inicio=new Date(a,m-1,d), fim=adicionarDias(inicio,Number(cfg.feriasDias)-1), atual=dataSemHora(data);
-      return atual>=inicio && atual<=fim;
+      const atual=dataSemHora(data), periodos=Array.isArray(cfg?.feriasPeriodos)?cfg.feriasPeriodos:[];
+      return periodos.some(periodo=>{
+        if (!periodo?.inicio || Number(periodo.dias)<1) return false;
+        const [a,m,d]=periodo.inicio.split('-').map(Number), inicio=new Date(a,m-1,d), fim=adicionarDias(inicio,Number(periodo.dias)-1);
+        return atual>=inicio && atual<=fim;
+      });
     }
     function pessoasDeFerias(data) {
       return pessoasDisponiveis().filter(id=>estaDeFerias(configEquipe[id],data)).map(id=>configEquipe[id].nome||id);
@@ -342,11 +366,7 @@
         if (codigo === 'P') codigo = 'F';
         else if (codigo === 'F') codigo = 'P';
       }
-      if (cfg?.feriasInicio && Number(cfg.feriasDias)>0) {
-        const [a,m,d] = cfg.feriasInicio.split('-').map(Number);
-        const inicio = new Date(a,m-1,d), fim = new Date(a,m-1,d + Number(cfg.feriasDias) - 1);
-        if (data >= inicio && data <= fim) codigo = 'FÉRIAS';
-      }
+      if (estaDeFerias(cfg,data)) codigo = 'FÉRIAS';
       return { bloco, cadastro, codigo };
     }
     function descricao(codigo) {
@@ -423,7 +443,7 @@
     document.querySelector('#btnSalvar').addEventListener('click',async()=>{
       const selecionada=pessoa.value;
       const novaEquipe={};
-      configLinhas.querySelectorAll('[data-id]').forEach(linha=>{const id=linha.dataset.id,cadastroAnterior=configEquipe[id]||{}; const nome=linha.querySelector('.cfg-nome').value.trim(); if(!nome)return; novaEquipe[id]={nome,setor:linha.querySelector('.cfg-setor').value.trim(),cargaHoraria:linha.querySelector('.cfg-carga').value,semana:linha.querySelector('.cfg-semana').value.trim(),sabado:linha.querySelector('.cfg-sabado').value.trim(),domingo:linha.querySelector('.cfg-domingo').value.trim(),feriasInicio:cadastroAnterior.feriasInicio||'',feriasDias:Number(cadastroAnterior.feriasDias)||0};});
+      configLinhas.querySelectorAll('[data-id]').forEach(linha=>{const id=linha.dataset.id,cadastroAnterior=configEquipe[id]||{}; const nome=linha.querySelector('.cfg-nome').value.trim(); if(!nome)return; novaEquipe[id]={nome,setor:linha.querySelector('.cfg-setor').value.trim(),cargaHoraria:linha.querySelector('.cfg-carga').value,semana:linha.querySelector('.cfg-semana').value.trim(),sabado:linha.querySelector('.cfg-sabado').value.trim(),domingo:linha.querySelector('.cfg-domingo').value.trim(),feriasPeriodos:Array.isArray(cadastroAnterior.feriasPeriodos)?cadastroAnterior.feriasPeriodos:[]};});
       if(!Object.keys(novaEquipe).length) return alert('Informe o nome de pelo menos um colaborador.');
       configEquipe=novaEquipe;
       localStorage.setItem(CHAVE_EQUIPE,JSON.stringify(configEquipe));
@@ -444,16 +464,28 @@
         alert('Informe a data de início e uma quantidade de dias maior que zero.');
         return;
       }
-      configEquipe[feriasPessoa.value].feriasInicio = feriasInicio.value;
-      configEquipe[feriasPessoa.value].feriasDias = dias;
+      const cfg=configEquipe[feriasPessoa.value];
+      if (!Array.isArray(cfg.feriasPeriodos)) cfg.feriasPeriodos=[];
+      const novoInicio=feriasInicio.value;
+      const [a,m,d]=novoInicio.split('-').map(Number), novoFim=adicionarDias(new Date(a,m-1,d),dias-1);
+      const sobreposto=cfg.feriasPeriodos.some(periodo=>{
+        const [pa,pm,pd]=periodo.inicio.split('-').map(Number), inicio=new Date(pa,pm-1,pd), fim=adicionarDias(inicio,Number(periodo.dias)-1);
+        return new Date(a,m-1,d)<=fim && novoFim>=inicio;
+      });
+      if (sobreposto) return alert('Este período se sobrepõe a outro período de férias já cadastrado.');
+      cfg.feriasPeriodos.push({inicio:novoInicio,dias});
+      cfg.feriasPeriodos.sort((x,y)=>x.inicio.localeCompare(y.inicio));
       localStorage.setItem(CHAVE_EQUIPE,JSON.stringify(configEquipe));
       await salvarDadosOnline();
-      painelFerias.hidden=true;
+      carregarFeriasSelecionadas();
       renderizar();
     });
-    document.querySelector('#btnLimparFerias').addEventListener('click',async()=>{
-      configEquipe[feriasPessoa.value].feriasInicio = '';
-      configEquipe[feriasPessoa.value].feriasDias = 0;
+    feriasLista.addEventListener('click',async e=>{
+      const botao=e.target.closest('[data-remover-ferias]');
+      if (!botao) return;
+      const indice=Number(botao.dataset.removerFerias), cfg=configEquipe[feriasPessoa.value];
+      if (!confirm('Remover somente este período de férias?')) return;
+      cfg.feriasPeriodos.splice(indice,1);
       localStorage.setItem(CHAVE_EQUIPE,JSON.stringify(configEquipe));
       await salvarDadosOnline();
       carregarFeriasSelecionadas();
